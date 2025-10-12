@@ -1,13 +1,10 @@
 :root {
     --bg-color: #121212;
-    --column-bg: #1e1e1e;
-    --item-bg: #2a2a2a;
-    --item-hover-bg: #3c3c3c;
-    --item-active-bg: #5e5ce6;
-    --border-color: #333333;
-    --font-color: #e0e0e0;
-    --font-color-muted: #888888;
+    --node-bg: #2a2a2a;
+    --node-border: #444;
+    --font-color: #f0f0f0;
     --font-family: 'Inter', sans-serif;
+    --transition-speed: 0.5s;
 }
 
 * { box-sizing: border-box; }
@@ -17,105 +14,123 @@ body {
     background-color: var(--bg-color);
     color: var(--font-color);
     margin: 0;
-    overflow-x: auto; /* Allow horizontal scrolling for many columns if needed */
-}
-
-.main-container {
-    display: flex;
-    flex-direction: row;
+    overflow: hidden; /* Prevent scrollbars */
     height: 100vh;
-    width: max-content;
-    min-width: 100%;
+    width: 100vw;
 }
 
-.column {
-    display: flex;
-    flex-direction: column;
-    min-width: 300px;
-    max-width: 350px;
-    border-right: 1px solid var(--border-color);
-    background-color: var(--column-bg);
-    overflow-y: auto;
-    padding: 10px;
-    opacity: 0;
-    transform: translateX(-20px);
-    animation: slideIn 0.4s ease-out forwards;
-}
-
-@keyframes slideIn {
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.column-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    padding: 15px;
-    color: var(--font-color);
-    position: sticky;
+.main-header {
+    position: fixed;
     top: 0;
-    background: var(--column-bg);
-    z-index: 10;
-}
-
-.item {
-    padding: 15px 20px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    background-color: var(--item-bg);
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    border-left: 4px solid transparent;
-}
-
-.item:hover {
-    background-color: var(--item-hover-bg);
-    transform: translateX(3px);
-}
-
-.item.active {
-    background-color: var(--item-active-bg);
-    color: #fff;
-    font-weight: 600;
-}
-
-.item h4 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 500;
+    left: 0;
+    width: 100%;
     display: flex;
     align-items: center;
+    padding: 15px 20px;
+    z-index: 100;
 }
 
-.item .icon {
-    margin-right: 12px;
-    font-size: 1.2rem;
+#title-display {
+    font-size: 1.5rem;
+    margin: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-/* Info Card (re-using previous clean style) */
+#back-btn {
+    background: var(--node-bg);
+    border: 1px solid var(--node-border);
+    color: var(--font-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 101;
+}
+
+#mindmap-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.node {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+    border-radius: 50%;
+    background-color: var(--node-bg);
+    border: 1px solid var(--node-border);
+    cursor: pointer;
+    transition: all var(--transition-speed) cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Fun elastic transition */
+    transform-origin: center center;
+}
+.node:hover {
+    border-color: #fff;
+    z-index: 50; /* Bring hovered node to the front */
+}
+
+/* Different states for nodes */
+.node.category {
+    width: 120px;
+    height: 120px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.node.subcategory {
+    width: 90px;
+    height: 90px;
+    font-size: 0.75rem;
+}
+
+/* State when a node is the active center */
+.node.center {
+    width: 150px;
+    height: 150px;
+    font-size: 1.1rem;
+    pointer-events: none; /* Can't click the center node */
+    z-index: 20;
+}
+/* State when a node is hidden */
+.node.hidden {
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Info Card (Mobile First) */
 #info-card {
-    position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0.95);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 85vh;
     background: rgba(30, 30, 30, 0.8);
     backdrop-filter: blur(10px);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    width: 90%; max-width: 600px; max-height: 80vh;
-    overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    z-index: 100; opacity: 0; padding: 25px 35px;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    border-top: 1px solid var(--node-border);
+    border-radius: 20px 20px 0 0;
+    overflow-y: auto;
+    z-index: 200;
+    padding: 20px;
+    padding-top: 40px; /* Space for close button */
+    transform: translateY(100%);
+    transition: transform 0.4s ease-out;
 }
 #info-card:not(.hidden) {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+    transform: translateY(0);
 }
+
 #close-card-btn {
     position: absolute; top: 10px; right: 15px; background: none; border: none;
-    color: var(--font-color); font-size: 2.5rem; cursor: pointer; opacity: 0.7;
+    color: var(--font-color); font-size: 2.5rem; cursor: pointer;
 }
-#close-card-btn:hover { opacity: 1; }
-/* ... (Add the rest of the info-card content styles from previous response if needed) ... */
 
-.hidden { display: none; }
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
