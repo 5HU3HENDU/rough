@@ -1,3 +1,9 @@
+---
+title: School Of Adults
+markmap:
+  initialExpandLevel: 2
+  spacingVertical: 20
+---
 # School of Adults
 
 ## Finance & Money
@@ -27,7 +33,7 @@
 - **Insurance**
   - **Summary**: Protecting yourself with Health and Term plans.
 
-## Career & Work
+## Career & Work 
 - **Résumé Writing**
   - **Summary**: Crafting a compelling résumé.
 - **Interview Skills**
@@ -36,7 +42,7 @@
   - **Summary**: Getting the compensation you deserve.
 - **Networking**
   - **Summary**: Building professional relationships.
-- **Productivity**
+- **Productivity** 
   - **Summary**: Managing your time and tasks at work.
 - **Upskilling**
   - **Summary**: Learning new skills for career growth.
