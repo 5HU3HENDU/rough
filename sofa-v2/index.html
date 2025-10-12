@@ -75,6 +75,7 @@
         </div>
     </div>
 
+    <!-- Markmap Libraries from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.4"></script>
@@ -83,28 +84,25 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const { Transformer, Markmap } = window.markmap;
 
-            // --- DOM Elements ---
             const container = document.getElementById('markmap-container');
             const infoCardOverlay = document.getElementById('info-card-overlay');
             const infoCardContent = document.getElementById('info-card-content');
             const closeCardBtn = document.getElementById('close-card-btn');
-
-            // --- Initialize Transformer ---
+            
             const transformer = new Transformer();
-
-            // *** THIS LINE IS NOW SIMPLER ***
-            // The initialExpandLevel option is now read from the markdown frontmatter
+            
+            // Create the Markmap instance without any initial options
             const mm = Markmap.create(container);
 
-            // --- Fetch and Render Markdown ---
             try {
                 const response = await fetch('data.md');
                 const markdownText = await response.text();
                 
-                // The transformer automatically reads the frontmatter
+                // The transformer will automatically parse the frontmatter
                 const { root, frontmatter } = transformer.transform(markdownText);
                 
-                // The library applies the frontmatter options by default
+                // Set the data and pass the frontmatter options to the instance
+                // The ?. is optional chaining, a safe way to access nested properties
                 mm.setData(root, frontmatter?.markmap);
                 mm.fit();
             } catch (error) {
@@ -112,7 +110,6 @@
                 container.innerHTML = `<p style="color:red; text-align:center;">Error loading data.md</p>`;
             }
 
-            // --- Handle Node Clicks for Interactivity ---
             mm.on('node.click', (node) => {
                 if (node.state.depth === 2) {
                     const parsedContent = parseNodeContent(node.content);
@@ -120,14 +117,12 @@
                 }
             });
 
-            // --- Helper Functions ---
             function parseNodeContent(markdownContent) {
                 const lines = markdownContent.split('\n');
                 const data = {
                     title: lines[0].replace(/^- \*\*/, '').replace(/\*\*$/, '').trim(),
                     content: {}
                 };
-
                 let currentSection = null;
                 lines.slice(1).forEach(line => {
                     const trimmedLine = line.trim();
@@ -149,7 +144,6 @@
             
             function renderInfoCard(data) {
                 let html = `<h2>${data.title}</h2>`;
-
                 if (data.content.summary) {
                     html += `<p>${data.content.summary[0].text}</p>`;
                 }
@@ -174,13 +168,11 @@
                     });
                     html += `</ul>`;
                 }
-
                 infoCardContent.innerHTML = html;
                 infoCardOverlay.classList.remove('hidden');
             }
 
-            // --- Event Listeners ---
-            closeCardBtn.addEventListener('click', () => infoCardOverlay.classList.remove('hidden'));
+            closeCardBtn.addEventListener('click', () => infoCardOverlay.classList.add('hidden'));
             infoCardOverlay.addEventListener('click', (e) => {
                 if (e.target === infoCardOverlay) {
                     infoCardOverlay.classList.add('hidden');
