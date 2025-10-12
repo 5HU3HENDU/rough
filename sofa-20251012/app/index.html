@@ -7,21 +7,24 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <header class="main-header">
-        <button id="back-btn" class="hidden">&larr; Back</button>
-        <h1 id="title-display">School of Adults</h1>
-    </header>
+    <div class="container">
+        <header class="main-header">
+            <h1>Your Scorecard</h1>
+            <p>Complete tasks in each category to improve your score.</p>
+        </header>
+        
+        <main id="dashboard-container" class="dashboard-container"></main>
+    </div>
 
-    <div id="mindmap-container">
+    <div id="info-card-overlay" class="hidden">
+        <div id="info-card">
+            <button id="close-card-btn">&times;</button>
+            <div id="info-card-content"></div>
         </div>
-
-    <div id="info-card" class="hidden">
-        <button id="close-card-btn">&times;</button>
-        <div id="info-card-content"></div>
     </div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
