@@ -1,13 +1,11 @@
 :root {
     --bg-color: #121212;
     --card-bg: #1e1e1e;
-    --item-bg: #2a2a2a;
+    --sub-item-bg: #2a2a2a;
     --border-color: #333333;
     --font-color: #e0e0e0;
     --font-color-muted: #888888;
     --font-family: 'Inter', sans-serif;
-    --progress-empty: #444;
-    --progress-fill: #5e5ce6;
 }
 
 * { box-sizing: border-box; }
@@ -20,7 +18,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -29,93 +27,77 @@ body {
     text-align: center;
     margin-bottom: 40px;
 }
-.main-header h1 {
-    font-size: 2.5rem;
-    margin: 0;
-}
-.main-header p {
-    font-size: 1.1rem;
-    color: var(--font-color-muted);
-}
+.main-header h1 { font-size: 2.5rem; margin: 0; }
+.main-header p { font-size: 1.1rem; color: var(--font-color-muted); }
 
-/* --- Category Card --- */
-.category-card {
+/* --- Icicle Chart --- */
+.category-block {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    margin-bottom: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
     overflow: hidden;
-    transition: all 0.3s ease;
 }
 
 .category-header {
+    padding: 20px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
-    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.category-header:hover {
+    background-color: #252525;
 }
 
-.category-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-}
-
-.category-progress {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.progress-ring {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
+.category-header::after {
+    content: '▼';
     font-size: 0.9rem;
-    font-weight: 600;
-    background: conic-gradient(var(--progress-fill) 0deg, var(--progress-empty) 0deg);
+    transition: transform 0.4s ease;
+}
+.category-block.expanded .category-header::after {
+    transform: rotate(180deg);
 }
 
-.sub-category-list {
+.sub-category-container {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.5s ease-out;
+    transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+    padding: 0 20px;
 }
 
-.category-card.expanded .sub-category-list {
-    max-height: 1000px; /* Large enough to fit content */
+.category-block.expanded .sub-category-container {
+    max-height: 1000px; /* Large enough for content */
+    padding: 0 20px 20px 20px;
 }
 
 .sub-category-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    background-color: var(--item-bg);
-    border-top: 1px solid var(--border-color);
+    background-color: var(--sub-item-bg);
+    padding: 15px;
+    margin-bottom: 8px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 .sub-category-item:hover {
     background-color: #3a3a3a;
+    transform: translateX(5px);
 }
-.sub-category-item .title { font-weight: 500; }
-
-.sub-category-score {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.sub-category-item:last-child {
+    margin-bottom: 0;
 }
-.stars {
+.sub-category-item .icon {
+    margin-right: 12px;
     font-size: 1.2rem;
-    color: var(--progress-empty);
 }
-.stars .filled { color: #feca57; }
-.score-text { color: var(--font-color-muted); font-size: 0.9rem; }
 
-/* --- Info Card --- */
+/* --- Info Card (Reused) --- */
 #info-card-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-color: rgba(0,0,0,0.7);
@@ -123,59 +105,20 @@ body {
     z-index: 1000; opacity: 1; transition: opacity 0.3s ease;
 }
 #info-card-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
+    opacity: 0; pointer-events: none;
 }
-
 #info-card {
-    background-color: var(--card-bg);
-    border-radius: 12px;
-    width: 90%; max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    padding: 25px 35px;
-    transform: scale(0.95);
-    transition: transform 0.3s ease;
+    background-color: var(--card-bg); border-radius: 12px;
+    width: 90%; max-width: 600px; max-height: 90vh;
+    overflow-y: auto; position: relative; padding: 25px 35px;
+    transform: scale(0.95); transition: transform 0.3s ease;
 }
 #info-card-overlay:not(.hidden) #info-card {
     transform: scale(1);
 }
-
 #close-card-btn {
     position: absolute; top: 10px; right: 15px; background: none; border: none;
     color: var(--font-color); font-size: 2.5rem; cursor: pointer;
 }
 
-/* --- Checkbox List in Info Card --- */
-.todo-list { list-style: none; padding-left: 0; }
-.todo-list li { margin-bottom: 15px; }
-.todo-list label {
-    display: flex;
-    align-items: center;
-    font-size: 1.1rem;
-    cursor: pointer;
-}
-.todo-list input[type="checkbox"] {
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border-color);
-    border-radius: 4px;
-    margin-right: 15px;
-    cursor: pointer;
-    position: relative;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-.todo-list input[type="checkbox"]:checked {
-    background-color: var(--progress-fill);
-    border-color: var(--progress-fill);
-}
-.todo-list input[type="checkbox"]:checked::after {
-    content: '✔';
-    position: absolute;
-    color: #fff;
-    font-size: 14px;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-}
+.hidden { display: none; }
