@@ -19,10 +19,8 @@
             font-family: var(--font-family); color: var(--font-color);
         }
         #markmap-container { width: 100%; height: 100%; }
-        /* Hide the default toolbar for our custom, clean look */
         .markmap-toolbar { display: none !important; }
 
-        /* --- Info Card --- */
         #info-card-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.7);
@@ -84,15 +82,16 @@
                     
                     const { root, frontmatter } = transformer.transform(markdownText);
                     
-                    // The key is to pass the frontmatter options when setting the data.
                     mm.setData(root, frontmatter?.markmap);
-                    await mm.fit(); // Using await ensures the fit happens after rendering
+                    await mm.fit();
                 } catch (error) {
                     console.error("Failed to load or render Markmap:", error);
                     container.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="red">Error loading data.md</text>`;
                 }
             }
 
+            // *** THIS IS THE CORRECTED LINE ***
+            // The method is .on(), not .om()
             mm.on('node.click', (node) => {
                 // Depth 2 are the sub-categories (Root is 0, Categories are 1)
                 if (node.state.depth === 2) {
