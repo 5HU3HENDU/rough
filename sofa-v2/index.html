@@ -81,7 +81,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // *** FIX: Get Transformer and Markmap from the global window.markmap object
             const { Transformer, Markmap } = window.markmap;
 
             // --- DOM Elements ---
@@ -93,7 +92,8 @@
             // --- Initialize Transformer ---
             const transformer = new Transformer();
 
-            // *** FIX: Use a different variable name for the instance (mm) to avoid conflicts
+            // *** THIS LINE IS NOW SIMPLER ***
+            // The initialExpandLevel option is now read from the markdown frontmatter
             const mm = Markmap.create(container);
 
             // --- Fetch and Render Markdown ---
@@ -101,9 +101,12 @@
                 const response = await fetch('data.md');
                 const markdownText = await response.text();
                 
-                const { root } = transformer.transform(markdownText);
-                mm.setData(root);
-                mm.fit(); // Fit the mindmap to the screen
+                // The transformer automatically reads the frontmatter
+                const { root, frontmatter } = transformer.transform(markdownText);
+                
+                // The library applies the frontmatter options by default
+                mm.setData(root, frontmatter?.markmap);
+                mm.fit();
             } catch (error) {
                 console.error("Failed to load or render Markmap:", error);
                 container.innerHTML = `<p style="color:red; text-align:center;">Error loading data.md</p>`;
@@ -111,7 +114,6 @@
 
             // --- Handle Node Clicks for Interactivity ---
             mm.on('node.click', (node) => {
-                // We only want to show the card for sub-categories (depth 2)
                 if (node.state.depth === 2) {
                     const parsedContent = parseNodeContent(node.content);
                     renderInfoCard(parsedContent);
@@ -130,11 +132,10 @@
                 lines.slice(1).forEach(line => {
                     const trimmedLine = line.trim();
                     if (trimmedLine.startsWith('- **')) {
-                        currentSection = trimmedLine.replace(/- \*\*/, '').replace(/\*\*:/, '').toLowerCase().trim().replace(' ', ''); // 'To Do' -> 'todo'
+                        currentSection = trimmedLine.replace(/- \*\*/, '').replace(/\*\*:/, '').toLowerCase().trim().replace(' ', '');
                         data.content[currentSection] = [];
                     } else if (currentSection && trimmedLine.startsWith('-')) {
                         let itemText = trimmedLine.substring(1).trim();
-                        // Check for markdown links and extract them
                         const linkMatch = itemText.match(/\[(.*?)\]\((.*?)\)/);
                         if (linkMatch) {
                             data.content[currentSection].push({ text: linkMatch[1], url: linkMatch[2] });
@@ -179,7 +180,7 @@
             }
 
             // --- Event Listeners ---
-            closeCardBtn.addEventListener('click', () => infoCardOverlay.classList.add('hidden'));
+            closeCardBtn.addEventListener('click', () => infoCardOverlay.classList.remove('hidden'));
             infoCardOverlay.addEventListener('click', (e) => {
                 if (e.target === infoCardOverlay) {
                     infoCardOverlay.classList.add('hidden');
