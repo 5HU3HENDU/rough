@@ -1,13 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
-    const dashboardContainer = document.getElementById('dashboard-container');
+    const icicleContainer = document.getElementById('icicle-container');
     const infoCardOverlay = document.getElementById('info-card-overlay');
     const infoCardContent = document.getElementById('info-card-content');
     const closeCardBtn = document.getElementById('close-card-btn');
 
     // --- State ---
     let fullData = null;
-    let progressData = {}; // { "sc-1-1": [true, false], ... }
 
     // --- Main Initializer ---
     async function init() {
@@ -15,137 +14,72 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('../database.yml');
             const yamlText = await response.text();
             fullData = jsyaml.load(yamlText);
-            loadProgress();
-            renderDashboard();
+            renderIcicleChart();
         } catch (error) {
-            console.error("Error loading data:", error);
-            dashboardContainer.innerHTML = '<p>Error loading content.</p>';
+            console.error("Error loading or parsing database.yml:", error);
+            icicleContainer.innerHTML = '<p>Error loading content.</p>';
         }
-    }
-
-    // --- Data & Progress Functions ---
-    function loadProgress() {
-        const savedProgress = localStorage.getItem('schoolOfAdultsProgress');
-        if (savedProgress) {
-            progressData = JSON.parse(savedProgress);
-        }
-    }
-
-    function saveProgress() {
-        localStorage.setItem('schoolOfAdultsProgress', JSON.stringify(progressData));
-    }
-
-    function getScores() {
-        const scores = {};
-        fullData.categories.forEach(cat => {
-            let totalTasks = 0;
-            let completedTasks = 0;
-
-            cat.subCategories.forEach(sub => {
-                const subTotal = sub.todo.length;
-                const progressArray = progressData[sub.id] || [];
-                const subCompleted = progressArray.filter(Boolean).length;
-                
-                scores[sub.id] = { completed: subCompleted, total: subTotal };
-                
-                totalTasks += subTotal;
-                completedTasks += subCompleted;
-            });
-
-            scores[cat.id] = { completed: completedTasks, total: totalTasks };
-        });
-        return scores;
     }
 
     // --- Render Functions ---
-    function renderDashboard() {
-        const scores = getScores();
-        dashboardContainer.innerHTML = ''; // Clear existing dashboard
+    function renderIcicleChart() {
+        icicleContainer.innerHTML = ''; // Clear previous content
 
         fullData.categories.forEach(category => {
-            const categoryScore = scores[category.id];
-            const percentage = categoryScore.total > 0 ? Math.round((categoryScore.completed / categoryScore.total) * 100) : 0;
+            // 1. Create the main block for the category
+            const categoryBlock = document.createElement('div');
+            categoryBlock.className = 'category-block';
 
-            const card = document.createElement('div');
-            card.className = 'category-card';
-            
-            // --- Category Header ---
+            // 2. Create the clickable header
             const header = document.createElement('div');
             header.className = 'category-header';
-            header.innerHTML = `
-                <div class="category-title">${category.title}</div>
-                <div class="category-progress">
-                    <div class="progress-ring" style="background: conic-gradient(var(--progress-fill) ${percentage}%, var(--progress-empty) 0deg)">
-                        ${percentage}%
-                    </div>
-                </div>
-            `;
-            header.addEventListener('click', () => card.classList.toggle('expanded'));
-            
-            // --- Sub-category List ---
-            const subList = document.createElement('div');
-            subList.className = 'sub-category-list';
-            
-            category.subCategories.forEach(sub => {
-                const subScore = scores[sub.id];
-                const starsHtml = '★'.repeat(subScore.completed) + '☆'.repeat(subScore.total - subScore.completed);
-
-                const item = document.createElement('div');
-                item.className = 'sub-category-item';
-                item.innerHTML = `
-                    <div class="title">${sub.title}</div>
-                    <div class="sub-category-score">
-                        <div class="stars"><span class="filled">${'★'.repeat(subScore.completed)}</span>${'☆'.repeat(subScore.total - subScore.completed)}</div>
-                        <div class="score-text">(${subScore.completed}/${subScore.total})</div>
-                    </div>
-                `;
-                item.addEventListener('click', () => renderInfoCard(sub));
-                subList.appendChild(item);
+            header.textContent = category.title;
+            header.style.borderLeft = `5px solid ${category.color}`;
+            header.addEventListener('click', () => {
+                categoryBlock.classList.toggle('expanded');
             });
 
-            card.appendChild(header);
-            card.appendChild(subList);
-            dashboardContainer.appendChild(card);
+            // 3. Create the container for sub-categories (initially hidden by CSS)
+            const subContainer = document.createElement('div');
+            subContainer.className = 'sub-category-container';
+
+            // 4. Create and append each sub-category item
+            category.subCategories.forEach(sub => {
+                const item = document.createElement('div');
+                item.className = 'sub-category-item';
+                item.innerHTML = `<span class="icon">${sub.icon || ''}</span> ${sub.title}`;
+                item.addEventListener('click', () => renderInfoCard(sub));
+                subContainer.appendChild(item);
+            });
+
+            // 5. Assemble the parts
+            categoryBlock.appendChild(header);
+            categoryBlock.appendChild(subContainer);
+            icicleContainer.appendChild(categoryBlock);
         });
     }
 
     function renderInfoCard(subCategory) {
-        const currentProgress = progressData[subCategory.id] || [];
-        const todoHtml = subCategory.todo.map((task, index) => `
-            <li>
-                <label>
-                    <input type="checkbox" data-sub-id="${subCategory.id}" data-task-index="${index}" ${currentProgress[index] ? 'checked' : ''}>
-                    <span>${task}</span>
-                </label>
-            </li>
-        `).join('');
+        // This function is reused from the Progress Dashboard, without the checkboxes
+        let websitesHtml = subCategory.websites.map(site => `<li><strong><a href="${site.url}" target="_blank">${site.name}</a></strong>: ${site.description}</li>`).join('');
+        let todoHtml = sub.todo.map(item => `<li>${item}</li>`).join('');
+        let avoidHtml = sub.avoid.map(item => `<li>${item}</li>`).join('');
 
         infoCardContent.innerHTML = `
             <h2>${subCategory.icon || ''} ${subCategory.title}</h2>
             <p>${subCategory.summary}</p>
-            <h3>✅ Things to Do</h3>
-            <ul class="todo-list">${todoHtml}</ul>
+            <h3>🔗 Websites & Tools</h3><ul>${websitesHtml}</ul>
+            <h3>✅ Things to Do</h3><ul>${todoHtml}</ul>
+            <h3>❌ Things to Avoid</h3><ul>${avoidHtml}</ul>
         `;
-
-        // Add event listeners to the new checkboxes
-        infoCardContent.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', (e) => {
-                const { subId, taskIndex } = e.target.dataset;
-                if (!progressData[subId]) {
-                    progressData[subId] = [];
-                }
-                progressData[subId][parseInt(taskIndex)] = e.target.checked;
-                saveProgress();
-                renderDashboard(); // Re-render the entire dashboard to update scores
-            });
-        });
-
+        
         infoCardOverlay.classList.remove('hidden');
     }
 
     // --- Event Listeners ---
     closeCardBtn.addEventListener('click', () => infoCardOverlay.classList.add('hidden'));
     infoCardOverlay.addEventListener('click', (e) => {
+        // Close card if clicking on the background overlay
         if (e.target === infoCardOverlay) {
             infoCardOverlay.classList.add('hidden');
         }
