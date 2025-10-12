@@ -1,15 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
-    const container = document.getElementById('mindmap-container');
-    const titleDisplay = document.getElementById('title-display');
-    const backBtn = document.getElementById('back-btn');
-    const infoCard = document.getElementById('info-card');
+    const dashboardContainer = document.getElementById('dashboard-container');
+    const infoCardOverlay = document.getElementById('info-card-overlay');
     const infoCardContent = document.getElementById('info-card-content');
     const closeCardBtn = document.getElementById('close-card-btn');
 
     // --- State ---
     let fullData = null;
-    let activeCategory = null;
+    let progressData = {}; // { "sc-1-1": [true, false], ... }
 
     // --- Main Initializer ---
     async function init() {
@@ -17,126 +15,139 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('../database.yml');
             const yamlText = await response.text();
             fullData = jsyaml.load(yamlText);
-            displayCategories();
+            loadProgress();
+            renderDashboard();
         } catch (error) {
-            console.error("Error loading database.yml:", error);
-            container.innerHTML = '<p>Error loading content.</p>';
+            console.error("Error loading data:", error);
+            dashboardContainer.innerHTML = '<p>Error loading content.</p>';
         }
     }
 
-    // --- Core Display Functions ---
-
-    function displayCategories() {
-        container.innerHTML = ''; // Clear the container
-        activeCategory = null;
-        titleDisplay.textContent = 'School of Adults';
-        backBtn.classList.add('hidden');
-
-        const categories = fullData.categories;
-        const radius = Math.min(container.clientWidth, container.clientHeight) * 0.35;
-        const angleStep = (2 * Math.PI) / categories.length;
-        
-        categories.forEach((category, i) => {
-            const angle = angleStep * i;
-            const x = container.clientWidth / 2 + radius * Math.cos(angle);
-            const y = container.clientHeight / 2 + radius * Math.sin(angle);
-            
-            const node = createNode(category, 'category');
-            setPosition(node, x, y);
-            node.addEventListener('click', () => displaySubCategories(category));
-            container.appendChild(node);
-        });
+    // --- Data & Progress Functions ---
+    function loadProgress() {
+        const savedProgress = localStorage.getItem('schoolOfAdultsProgress');
+        if (savedProgress) {
+            progressData = JSON.parse(savedProgress);
+        }
     }
 
-    function displaySubCategories(category) {
-        activeCategory = category;
-        titleDisplay.textContent = category.title;
-        backBtn.classList.remove('hidden');
+    function saveProgress() {
+        localStorage.setItem('schoolOfAdultsProgress', JSON.stringify(progressData));
+    }
 
-        const allNodes = container.querySelectorAll('.node');
-        const radius = Math.min(container.clientWidth, container.clientHeight) * 0.3;
-        const angleStep = (2 * Math.PI) / category.subCategories.length;
+    function getScores() {
+        const scores = {};
+        fullData.categories.forEach(cat => {
+            let totalTasks = 0;
+            let completedTasks = 0;
 
-        // Move all existing category nodes
-        allNodes.forEach(node => {
-            if (node.dataset.id === category.id) {
-                // This is the selected one, move it to the center
-                node.className = 'node category center';
-                setPosition(node, container.clientWidth / 2, container.clientHeight / 2);
-            } else {
-                // Hide the others
-                node.classList.add('hidden');
-            }
-        });
-
-        // Create and position the new sub-category nodes
-        setTimeout(() => { // Delay to allow main animation to start
-            category.subCategories.forEach((sub, i) => {
-                const angle = angleStep * i;
-                const x = container.clientWidth / 2 + radius * Math.cos(angle);
-                const y = container.clientHeight / 2 + radius * Math.sin(angle);
-
-                const node = createNode(sub, 'subcategory');
-                // Start them at the center and let CSS transition move them out
-                setPosition(node, container.clientWidth / 2, container.clientHeight / 2);
-                node.classList.add('hidden'); // Start hidden
-                node.addEventListener('click', () => showInfoCard(sub));
-                container.appendChild(node);
-
-                // Animate to final position after a tiny delay
-                setTimeout(() => {
-                    node.classList.remove('hidden');
-                    setPosition(node, x, y);
-                }, 50);
+            cat.subCategories.forEach(sub => {
+                const subTotal = sub.todo.length;
+                const progressArray = progressData[sub.id] || [];
+                const subCompleted = progressArray.filter(Boolean).length;
+                
+                scores[sub.id] = { completed: subCompleted, total: subTotal };
+                
+                totalTasks += subTotal;
+                completedTasks += subCompleted;
             });
-        }, 150);
+
+            scores[cat.id] = { completed: completedTasks, total: totalTasks };
+        });
+        return scores;
     }
 
-    // --- UI Helpers ---
+    // --- Render Functions ---
+    function renderDashboard() {
+        const scores = getScores();
+        dashboardContainer.innerHTML = ''; // Clear existing dashboard
 
-    function createNode(data, type) {
-        const node = document.createElement('div');
-        node.className = `node ${type}`;
-        node.dataset.id = data.id;
-        node.textContent = data.title;
-        if (data.color) {
-            node.style.borderColor = data.color;
-            node.style.boxShadow = `0 0 15px -5px ${data.color}`;
-        }
-        return node;
+        fullData.categories.forEach(category => {
+            const categoryScore = scores[category.id];
+            const percentage = categoryScore.total > 0 ? Math.round((categoryScore.completed / categoryScore.total) * 100) : 0;
+
+            const card = document.createElement('div');
+            card.className = 'category-card';
+            
+            // --- Category Header ---
+            const header = document.createElement('div');
+            header.className = 'category-header';
+            header.innerHTML = `
+                <div class="category-title">${category.title}</div>
+                <div class="category-progress">
+                    <div class="progress-ring" style="background: conic-gradient(var(--progress-fill) ${percentage}%, var(--progress-empty) 0deg)">
+                        ${percentage}%
+                    </div>
+                </div>
+            `;
+            header.addEventListener('click', () => card.classList.toggle('expanded'));
+            
+            // --- Sub-category List ---
+            const subList = document.createElement('div');
+            subList.className = 'sub-category-list';
+            
+            category.subCategories.forEach(sub => {
+                const subScore = scores[sub.id];
+                const starsHtml = '★'.repeat(subScore.completed) + '☆'.repeat(subScore.total - subScore.completed);
+
+                const item = document.createElement('div');
+                item.className = 'sub-category-item';
+                item.innerHTML = `
+                    <div class="title">${sub.title}</div>
+                    <div class="sub-category-score">
+                        <div class="stars"><span class="filled">${'★'.repeat(subScore.completed)}</span>${'☆'.repeat(subScore.total - subScore.completed)}</div>
+                        <div class="score-text">(${subScore.completed}/${subScore.total})</div>
+                    </div>
+                `;
+                item.addEventListener('click', () => renderInfoCard(sub));
+                subList.appendChild(item);
+            });
+
+            card.appendChild(header);
+            card.appendChild(subList);
+            dashboardContainer.appendChild(card);
+        });
     }
-    
-    function setPosition(element, x, y) {
-        // Position from center, not top-left corner
-        element.style.left = `${x - element.offsetWidth / 2}px`;
-        element.style.top = `${y - element.offsetHeight / 2}px`;
-    }
-    
-    function showInfoCard(subCategory) {
-        let websitesHtml = subCategory.websites.map(site => `<li><strong><a href="${site.url}" target="_blank">${site.name}</a></strong>: ${site.description}</li>`).join('');
-        let todoHtml = subCategory.todo.map(item => `<li>${item}</li>`).join('');
-        let avoidHtml = subCategory.avoid.map(item => `<li>${item}</li>`).join('');
-        
+
+    function renderInfoCard(subCategory) {
+        const currentProgress = progressData[subCategory.id] || [];
+        const todoHtml = subCategory.todo.map((task, index) => `
+            <li>
+                <label>
+                    <input type="checkbox" data-sub-id="${subCategory.id}" data-task-index="${index}" ${currentProgress[index] ? 'checked' : ''}>
+                    <span>${task}</span>
+                </label>
+            </li>
+        `).join('');
+
         infoCardContent.innerHTML = `
             <h2>${subCategory.icon || ''} ${subCategory.title}</h2>
             <p>${subCategory.summary}</p>
-            <h3>🔗 Websites & Tools</h3><ul>${websitesHtml}</ul>
-            <h3>✅ Things to Do</h3><ul>${todoHtml}</ul>
-            <h3>❌ Things to Avoid</h3><ul>${avoidHtml}</ul>`;
-        
-        infoCard.classList.remove('hidden');
+            <h3>✅ Things to Do</h3>
+            <ul class="todo-list">${todoHtml}</ul>
+        `;
+
+        // Add event listeners to the new checkboxes
+        infoCardContent.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const { subId, taskIndex } = e.target.dataset;
+                if (!progressData[subId]) {
+                    progressData[subId] = [];
+                }
+                progressData[subId][parseInt(taskIndex)] = e.target.checked;
+                saveProgress();
+                renderDashboard(); // Re-render the entire dashboard to update scores
+            });
+        });
+
+        infoCardOverlay.classList.remove('hidden');
     }
 
     // --- Event Listeners ---
-    backBtn.addEventListener('click', displayCategories);
-    closeCardBtn.addEventListener('click', () => infoCard.classList.add('hidden'));
-    window.addEventListener('resize', () => {
-        // Redraw the current view on resize to adjust positions
-        if (activeCategory) {
-            // A simplified redraw for sub-category view
-            displaySubCategories(activeCategory);
-        } else {
-            displayCategories();
+    closeCardBtn.addEventListener('click', () => infoCardOverlay.classList.add('hidden'));
+    infoCardOverlay.addEventListener('click', (e) => {
+        if (e.target === infoCardOverlay) {
+            infoCardOverlay.classList.add('hidden');
         }
     });
 
