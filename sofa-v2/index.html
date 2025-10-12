@@ -81,8 +81,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const { Transformer } = markmap;
-            const { Markmap } = markmap;
+            // *** FIX: Get Transformer and Markmap from the global window.markmap object
+            const { Transformer, Markmap } = window.markmap;
 
             // --- DOM Elements ---
             const container = document.getElementById('markmap-container');
@@ -90,9 +90,11 @@
             const infoCardContent = document.getElementById('info-card-content');
             const closeCardBtn = document.getElementById('close-card-btn');
 
-            // --- Initialize Transformer and Markmap ---
+            // --- Initialize Transformer ---
             const transformer = new Transformer();
-            const markmap = Markmap.create(container);
+
+            // *** FIX: Use a different variable name for the instance (mm) to avoid conflicts
+            const mm = Markmap.create(container);
 
             // --- Fetch and Render Markdown ---
             try {
@@ -100,15 +102,15 @@
                 const markdownText = await response.text();
                 
                 const { root } = transformer.transform(markdownText);
-                markmap.setData(root);
-                markmap.fit(); // Fit the mindmap to the screen
+                mm.setData(root);
+                mm.fit(); // Fit the mindmap to the screen
             } catch (error) {
                 console.error("Failed to load or render Markmap:", error);
                 container.innerHTML = `<p style="color:red; text-align:center;">Error loading data.md</p>`;
             }
 
             // --- Handle Node Clicks for Interactivity ---
-            markmap.on('node.click', (node) => {
+            mm.on('node.click', (node) => {
                 // We only want to show the card for sub-categories (depth 2)
                 if (node.state.depth === 2) {
                     const parsedContent = parseNodeContent(node.content);
