@@ -1,112 +1,103 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const app = document.getElementById('app');
+    // --- DOM Elements ---
+    const mainContainer = document.querySelector('.main-container');
     const infoCard = document.getElementById('info-card');
     const infoCardContent = document.getElementById('info-card-content');
     const closeCardBtn = document.getElementById('close-card-btn');
-    const backBtn = document.getElementById('back-btn');
 
+    // --- State ---
     let fullData = null;
 
-    // Main function to start the application
+    // --- Main Initializer ---
     async function init() {
         try {
             const response = await fetch('../database.yml');
             const yamlText = await response.text();
             fullData = jsyaml.load(yamlText);
-            renderPlanets();
+            renderCategoryColumn(fullData.categories);
         } catch (error) {
             console.error("Error loading or parsing database.yml:", error);
-            app.innerHTML = '<p style="color: red;">Failed to load content.</p>';
+            mainContainer.innerHTML = '<p style="padding: 20px; color: red;">Failed to load content.</p>';
         }
     }
 
-    // Renders the main category "planets"
-    function renderPlanets() {
-        app.innerHTML = ''; // Clear previous state
-        fullData.categories.forEach(category => {
-            const planet = document.createElement('div');
-            planet.className = 'planet';
-            planet.textContent = category.title;
-            planet.style.backgroundColor = category.color;
-            planet.dataset.categoryId = category.id;
-            planet.addEventListener('click', () => handlePlanetClick(category));
-            app.appendChild(planet);
-        });
-    }
-
-    // Handles clicking on a "planet" (category)
-    function handlePlanetClick(category) {
-        app.classList.add('zoomed-in');
-        backBtn.classList.remove('hidden');
-
-        document.querySelectorAll('.planet').forEach(p => {
-            if (p.dataset.categoryId === category.id) {
-                p.classList.add('active');
-            }
-        });
-        
-        renderMoons(category.subCategories);
-    }
-
-    // Renders the sub-category "moons" for the active planet
-    function renderMoons(subCategories) {
-        const angleStep = 360 / subCategories.length;
-        const radius = Math.min(window.innerWidth, window.innerHeight) / 3.5;
-
-        subCategories.forEach((subCategory, index) => {
-            const angle = (angleStep * index) * (Math.PI / 180); // Convert to radians
-            const x = Math.cos(angle) * radius;
-            const y = Math.sin(angle) * radius;
-
-            const moon = document.createElement('div');
-            moon.className = 'moon';
-            moon.textContent = subCategory.title;
-            moon.style.transform = `translate(${x}px, ${y}px)`;
-            moon.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent planet click from firing again
-                handleMoonClick(subCategory);
+    // --- Column Rendering Functions ---
+    function renderCategoryColumn(categories) {
+        const column = createColumn('Categories');
+        categories.forEach(category => {
+            const item = createItem(category);
+            item.style.borderLeftColor = category.color;
+            item.addEventListener('click', () => {
+                // Remove all columns after this one
+                removeColumns(1);
+                // De-select other items in this column
+                column.querySelectorAll('.item').forEach(el => el.classList.remove('active'));
+                // Select the current item
+                item.classList.add('active');
+                renderSubCategoryColumn(category.subCategories, category.title);
             });
-            app.appendChild(moon);
+            column.appendChild(item);
         });
+        mainContainer.appendChild(column);
     }
 
-    // Handles clicking on a "moon" (sub-category)
-    function handleMoonClick(subCategory) {
+    function renderSubCategoryColumn(subCategories, parentTitle) {
+        const column = createColumn(parentTitle);
+        subCategories.forEach(subCategory => {
+            const item = createItem(subCategory);
+            item.addEventListener('click', () => {
+                column.querySelectorAll('.item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+                showInfoCard(subCategory);
+            });
+            column.appendChild(item);
+        });
+        mainContainer.appendChild(column);
+    }
+
+    // --- UI Helpers ---
+    function createColumn(title) {
+        const column = document.createElement('div');
+        column.className = 'column';
+        const columnTitle = document.createElement('h3');
+        columnTitle.className = 'column-title';
+        columnTitle.textContent = title;
+        column.appendChild(columnTitle);
+        return column;
+    }
+
+    function createItem(data) {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerHTML = `<h4><span class="icon">${data.icon || ''}</span>${data.title}</h4>`;
+        return item;
+    }
+
+    function removeColumns(fromIndex) {
+        const allColumns = mainContainer.querySelectorAll('.column');
+        for (let i = fromIndex; i < allColumns.length; i++) {
+            allColumns[i].remove();
+        }
+    }
+    
+    function showInfoCard(subCategory) {
         let websitesHtml = subCategory.websites.map(site => `<li><strong><a href="${site.url}" target="_blank">${site.name}</a></strong>: ${site.description}</li>`).join('');
         let todoHtml = subCategory.todo.map(item => `<li>${item}</li>`).join('');
         let avoidHtml = subCategory.avoid.map(item => `<li>${item}</li>`).join('');
-
+        
         infoCardContent.innerHTML = `
-            <h2>${subCategory.icon} ${subCategory.title}</h2>
+            <h2>${subCategory.icon || ''} ${subCategory.title}</h2>
             <p>${subCategory.summary}</p>
-            <h3>🔗 Websites & Tools</h3>
-            <ul>${websitesHtml}</ul>
-            <h3>✅ Things to Do</h3>
-            <ul class="todo-list">${todoHtml}</ul>
-            <h3>❌ Things to Avoid</h3>
-            <ul class="avoid-list">${avoidHtml}</ul>
-        `;
+            <h3>🔗 Websites & Tools</h3><ul>${websitesHtml}</ul>
+            <h3>✅ Things to Do</h3><ul>${todoHtml}</ul>
+            <h3>❌ Things to Avoid</h3><ul>${avoidHtml}</ul>`;
+        
         infoCard.classList.remove('hidden');
     }
 
-    // Function to reset the view back to the planets
-    function resetView() {
-        app.classList.remove('zoomed-in');
-        backBtn.classList.add('hidden');
-        infoCard.classList.add('hidden');
-
-        document.querySelectorAll('.planet.active').forEach(p => p.classList.remove('active'));
-        
-        // Remove moons after transition ends for a smoother effect
-        setTimeout(() => {
-            document.querySelectorAll('.moon').forEach(m => m.remove());
-        }, 500); // Should match transition time
-    }
-
-    // Event listeners for closing/resetting
+    // --- Event Listeners ---
     closeCardBtn.addEventListener('click', () => infoCard.classList.add('hidden'));
-    backBtn.addEventListener('click', resetView);
 
-    // Initialize the app
+    // --- Kick things off ---
     init();
 });
