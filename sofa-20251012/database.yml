@@ -1,0 +1,78 @@
+# This is the single source of truth for your entire website.
+# Add or edit content here.
+
+categories:
+  - id: "finance"
+    title: "Finance & Money"
+    color: "#4A90E2"
+    subCategories:
+      - id: "investing"
+        title: "Investing"
+        summary: "Start your journey to build wealth by making your money work for you."
+        icon: "📈"
+        websites:
+          - name: "Zerodha Varsity"
+            url: "https://zerodha.com/varsity/"
+            description: "The best free resource to learn the Indian stock market."
+          - name: "Value Research"
+            url: "https://www.valueresearchonline.com/"
+            description: "Excellent for detailed analysis and data on mutual funds."
+        todo:
+          - "Open a Demat and Trading account with a discount broker."
+          - "Complete your KYC (Know Your Customer) process."
+          - "Start a Systematic Investment Plan (SIP) in an index fund."
+        avoid:
+          - "Never invest in something you don't understand."
+          - "Don't panic and sell during market downturns."
+      
+      - id: "taxes"
+        title: "Filing Taxes"
+        summary: "Understand your payslip and file your Income Tax Return (ITR) correctly."
+        icon: "🧾"
+        websites:
+          - name: "Income Tax Portal"
+            url: "https://www.incometax.gov.in/iec/foportal/"
+            description: "The official government website for filing your taxes."
+        todo:
+          - "Link your Aadhaar and PAN card before you begin."
+          - "Gather your Form 16 from your employer."
+          - "Always e-verify your return after filing."
+        avoid:
+          - "Don't wait until the last day (July 31st) to file."
+          - "Never provide inaccurate information about your income."
+
+  - id: "career"
+    title: "Career & Work"
+    color: "#50E3C2"
+    subCategories:
+      - id: "resume"
+        title: "Building a Résumé"
+        summary: "Create a professional résumé that gets noticed by recruiters."
+        icon: "📄"
+        websites:
+          - name: "Canva Resume Templates"
+            url: "https://www.canva.com/resumes/templates/"
+            description: "Easy-to-use templates for creating visually appealing résumés."
+        todo:
+          - "Use action verbs to describe accomplishments (e.g., 'Managed', 'Created')."
+          - "Keep it to one page if you have less than 10 years of experience."
+          - "Proofread multiple times for typos."
+        avoid:
+          - "Don't use a font that is hard to read."
+          - "Avoid including personal details like marital status or religion."
+
+      - id: "interviews"
+        title: "Job Interviews"
+        summary: "Prepare for common interview questions and present yourself confidently."
+        icon: "💼"
+        websites:
+          - name: "Glassdoor Interview Questions"
+            url: "https://www.glassdoor.co.in/Interview/"
+            description: "See real interview questions asked at specific companies."
+        todo:
+          - "Research the company and the role thoroughly."
+          - "Prepare answers for common questions like 'Tell me about yourself'."
+          - "Prepare at least two thoughtful questions to ask the interviewer."
+        avoid:
+          - "Don't speak negatively about your previous employers."
+          - "Avoid arriving late, both for in-person and virtual interviews."
