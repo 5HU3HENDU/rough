@@ -1,78 +1,410 @@
-# This is the single source of truth for your entire website.
-# Add or edit content here.
+# The single source of truth for the entire website.
+# Now expanded to 10 categories for UI stress-testing.
 
 categories:
-  - id: "finance"
+  - id: "category-1"
     title: "Finance & Money"
-    color: "#4A90E2"
+    color: "#5e5ce6"
     subCategories:
-      - id: "investing"
-        title: "Investing"
-        summary: "Start your journey to build wealth by making your money work for you."
+      - id: "sc-1-1"
+        title: "Investing 101"
+        summary: "Basics of starting your investment journey."
         icon: "📈"
-        websites:
-          - name: "Zerodha Varsity"
-            url: "https://zerodha.com/varsity/"
-            description: "The best free resource to learn the Indian stock market."
-          - name: "Value Research"
-            url: "https://www.valueresearchonline.com/"
-            description: "Excellent for detailed analysis and data on mutual funds."
-        todo:
-          - "Open a Demat and Trading account with a discount broker."
-          - "Complete your KYC (Know Your Customer) process."
-          - "Start a Systematic Investment Plan (SIP) in an index fund."
-        avoid:
-          - "Never invest in something you don't understand."
-          - "Don't panic and sell during market downturns."
-      
-      - id: "taxes"
-        title: "Filing Taxes"
-        summary: "Understand your payslip and file your Income Tax Return (ITR) correctly."
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Start an SIP.", "Open a Demat account."]
+        avoid: ["Avoid panic selling.", "Don't invest in tips."]
+      - id: "sc-1-2"
+        title: "Taxation"
+        summary: "Understanding and filing your income taxes."
         icon: "🧾"
-        websites:
-          - name: "Income Tax Portal"
-            url: "https://www.incometax.gov.in/iec/foportal/"
-            description: "The official government website for filing your taxes."
-        todo:
-          - "Link your Aadhaar and PAN card before you begin."
-          - "Gather your Form 16 from your employer."
-          - "Always e-verify your return after filing."
-        avoid:
-          - "Don't wait until the last day (July 31st) to file."
-          - "Never provide inaccurate information about your income."
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["File before the deadline.", "Use Form 16."]
+        avoid: ["Don't hide income."]
+      - id: "sc-1-3"
+        title: "Credit Score"
+        summary: "How to build and maintain a good score."
+        icon: "💳"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Pay bills on time."]
+        avoid: ["Avoid multiple new credit cards."]
+      - id: "sc-1-4"
+        title: "Budgeting"
+        summary: "Managing your income and expenses effectively."
+        icon: "💰"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Follow the 50/30/20 rule."]
+        avoid: ["Avoid impulse purchases."]
+      - id: "sc-1-5"
+        title: "Insurance"
+        summary: "Protecting yourself with Health and Term plans."
+        icon: "🛡️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Get a term plan early."]
+        avoid: ["Don't under-insure yourself."]
 
-  - id: "career"
+  - id: "category-2"
     title: "Career & Work"
-    color: "#50E3C2"
+    color: "#00b894"
     subCategories:
-      - id: "resume"
-        title: "Building a Résumé"
-        summary: "Create a professional résumé that gets noticed by recruiters."
+      - id: "sc-2-1"
+        title: "Résumé Writing"
+        summary: "Crafting a compelling résumé."
         icon: "📄"
-        websites:
-          - name: "Canva Resume Templates"
-            url: "https://www.canva.com/resumes/templates/"
-            description: "Easy-to-use templates for creating visually appealing résumés."
-        todo:
-          - "Use action verbs to describe accomplishments (e.g., 'Managed', 'Created')."
-          - "Keep it to one page if you have less than 10 years of experience."
-          - "Proofread multiple times for typos."
-        avoid:
-          - "Don't use a font that is hard to read."
-          - "Avoid including personal details like marital status or religion."
-
-      - id: "interviews"
-        title: "Job Interviews"
-        summary: "Prepare for common interview questions and present yourself confidently."
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Use action verbs."]
+        avoid: ["Avoid typos."]
+      - id: "sc-2-2"
+        title: "Interview Skills"
+        summary: "Nailing your job interviews."
         icon: "💼"
-        websites:
-          - name: "Glassdoor Interview Questions"
-            url: "https://www.glassdoor.co.in/Interview/"
-            description: "See real interview questions asked at specific companies."
-        todo:
-          - "Research the company and the role thoroughly."
-          - "Prepare answers for common questions like 'Tell me about yourself'."
-          - "Prepare at least two thoughtful questions to ask the interviewer."
-        avoid:
-          - "Don't speak negatively about your previous employers."
-          - "Avoid arriving late, both for in-person and virtual interviews."
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Research the company."]
+        avoid: ["Don't speak ill of past employers."]
+      - id: "sc-2-3"
+        title: "Salary Negotiation"
+        summary: "Getting the compensation you deserve."
+        icon: "💸"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Know your market value."]
+        avoid: ["Don't accept the first offer immediately."]
+      - id: "sc-2-4"
+        title: "Networking"
+        summary: "Building professional relationships."
+        icon: "🤝"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Use LinkedIn effectively."]
+        avoid: ["Don't just ask for favors."]
+      - id: "sc-2-5"
+        title: "Productivity"
+        summary: "Managing your time and tasks at work."
+        icon: "⏱️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Use the Pomodoro Technique."]
+        avoid: ["Avoid multitasking."]
+      - id: "sc-2-6"
+        title: "Upskilling"
+        summary: "Learning new skills for career growth."
+        icon: "🚀"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Take online courses."]
+        avoid: ["Avoid learning without a goal."]
+
+  - id: "category-3"
+    title: "Home & Living"
+    color: "#ff9f43"
+    subCategories:
+      - id: "sc-3-1"
+        title: "Renting an Apartment"
+        summary: "The A-Z of finding and renting a place."
+        icon: "🏠"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Read the rental agreement carefully."]
+        avoid: ["Avoid paying a huge deposit without a receipt."]
+      - id: "sc-3-2"
+        title: "Basic Home Repairs"
+        summary: "Fixing common issues around the house."
+        icon: "🛠️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Learn to fix a leaky faucet."]
+        avoid: ["Don't ignore electrical problems."]
+      - id: "sc-3-3"
+        title: "Cooking Basics"
+        summary: "Essential cooking skills for beginners."
+        icon: "🍳"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Master a few simple recipes."]
+        avoid: ["Don't be afraid to experiment."]
+      - id: "sc-3-4"
+        title: "Home Organization"
+        summary: "Decluttering and organizing your space."
+        icon: "🧹"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Follow the KonMari method."]
+        avoid: ["Avoid buying unnecessary storage boxes."]
+      - id: "sc-3-5"
+        title: "Managing Utilities"
+        summary: "Handling electricity, water, and internet bills."
+        icon: "💡"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Set up auto-pay for bills."]
+        avoid: ["Avoid late payment fees."]
+
+  - id: "category-4"
+    title: "Health & Wellness"
+    color: "#ea4c89"
+    subCategories:
+      - id: "sc-4-1"
+        title: "Mental Health"
+        summary: "Prioritizing your mental well-being."
+        icon: "🧠"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Practice mindfulness."]
+        avoid: ["Don't hesitate to seek therapy."]
+      - id: "sc-4-2"
+        title: "Physical Fitness"
+        summary: "Incorporating exercise into your routine."
+        icon: "💪"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Find an activity you enjoy."]
+        avoid: ["Avoid overexertion."]
+      - id: "sc-4-3"
+        title: "Nutrition Basics"
+        summary: "Understanding a balanced diet."
+        icon: "🍎"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Eat more whole foods."]
+        avoid: ["Avoid processed foods and sugary drinks."]
+      - id: "sc-4-4"
+        title: "Sleep Hygiene"
+        summary: "Improving the quality of your sleep."
+        icon: "😴"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Maintain a consistent sleep schedule."]
+        avoid: ["Avoid screens before bed."]
+      - id: "sc-4-5"
+        title: "Navigating Healthcare"
+        summary: "Finding doctors and understanding insurance."
+        icon: "🩺"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Get regular check-ups."]
+        avoid: ["Don't ignore symptoms."]
+
+  - id: "category-5"
+    title: "Government & Legal"
+    color: "#00cec9"
+    subCategories:
+      - id: "sc-5-1"
+        title: "Aadhaar & PAN"
+        summary: "Managing your essential identity documents."
+        icon: "🆔"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Link your PAN and Aadhaar."]
+        avoid: ["Don't share your OTP with anyone."]
+      - id: "sc-5-2"
+        title: "Passport Application"
+        summary: "The process of getting your passport."
+        icon: "✈️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Apply through the official portal."]
+        avoid: ["Avoid mistakes on the application form."]
+      - id: "sc-5-3"
+        title: "Driver's License"
+        summary: "Getting your learner's and permanent license."
+        icon: "🚗"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Practice for the test."]
+        avoid: ["Don't use agents unnecessarily."]
+      - id: "sc-5-4"
+        title: "Voter ID"
+        summary: "Registering to vote."
+        icon: "🗳️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Register as soon as you turn 18."]
+        avoid: ["Avoid waiting until an election is near."]
+      - id: "sc-5-5"
+        title: "Understanding Contracts"
+        summary: "Basics of reading legal agreements."
+        icon: "📜"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Read the fine print."]
+        avoid: ["Don't sign anything you don't understand."]
+
+  - id: "category-6"
+    title: "Digital Life"
+    color: "#6c5ce7"
+    subCategories:
+      - id: "sc-6-1"
+        title: "Cybersecurity"
+        summary: "Protecting yourself online."
+        icon: "🔒"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Use strong, unique passwords."]
+        avoid: ["Avoid clicking on suspicious links."]
+      - id: "sc-6-2"
+        title: "Cloud Storage"
+        summary: "Using Google Drive, Dropbox, etc."
+        icon: "☁️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Enable two-factor authentication."]
+        avoid: ["Don't store sensitive data without encryption."]
+      - id: "sc-6-3"
+        title: "Email Etiquette"
+        summary: "Writing professional emails."
+        icon: "✉️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Use a clear subject line."]
+        avoid: ["Avoid using slang or emojis in formal emails."]
+      - id: "sc-6-4"
+        title: "Social Media Presence"
+        summary: "Managing your online brand."
+        icon: "🌐"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Keep your profiles professional."]
+        avoid: ["Avoid oversharing personal information."]
+      - id: "sc-6-5"
+        title: "Digital Detox"
+        summary: "Taking a break from screens."
+        icon: "🔌"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Set screen time limits."]
+        avoid: ["Don't sleep with your phone next to you."]
+
+  - id: "category-7"
+    title: "Social & Relationships"
+    color: "#fd79a8"
+    subCategories:
+      - id: "sc-7-1"
+        title: "Public Speaking"
+        summary: "Dummy summary for this sub-category."
+        icon: "🎤"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-7-2"
+        title: "Conflict Resolution"
+        summary: "Dummy summary for this sub-category."
+        icon: "🕊️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-7-3"
+        title: "Building Friendships"
+        summary: "Dummy summary for this sub-category."
+        icon: "🧑‍🤝‍🧑"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-7-4"
+        title: "Dating & Romance"
+        summary: "Dummy summary for this sub-category."
+        icon: "❤️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-7-5"
+        title: "Family Dynamics"
+        summary: "Dummy summary for this sub-category."
+        icon: "👨‍👩‍👧‍👦"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+
+  - id: "category-8"
+    title: "Travel & Transport"
+    color: "#0984e3"
+    subCategories:
+      - id: "sc-8-1"
+        title: "Booking Flights"
+        summary: "Dummy summary for this sub-category."
+        icon: "✈️"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-8-2"
+        title: "Train Travel"
+        summary: "Dummy summary for this sub-category."
+        icon: "🚂"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-8-3"
+        title: "Car Maintenance"
+        summary: "Dummy summary for this sub-category."
+        icon: "🔧"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-8-4"
+        title: "Public Transport"
+        summary: "Dummy summary for this sub-category."
+        icon: "🚌"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-8-5"
+        title: "Packing Smart"
+        summary: "Dummy summary for this sub-category."
+        icon: "🧳"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+
+  - id: "category-9"
+    title: "Hobbies & Leisure"
+    color: "#feca57"
+    subCategories:
+      - id: "sc-9-1"
+        title: "Finding a Hobby"
+        summary: "Dummy summary for this sub-category."
+        icon: "🎨"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-9-2"
+        title: "Reading for Pleasure"
+        summary: "Dummy summary for this sub-category."
+        icon: "📚"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-9-3"
+        title: "Learning an Instrument"
+        summary: "Dummy summary for this sub-category."
+        icon: "🎸"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-9-4"
+        title: "Volunteering"
+        summary: "Dummy summary for this sub-category."
+        icon: "🙌"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-9-5"
+        title: "Gardening"
+        summary: "Dummy summary for this sub-category."
+        icon: "🌱"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+
+  - id: "category-10"
+    title: "Personal Growth"
+    color: "#a29bfe"
+    subCategories:
+      - id: "sc-10-1"
+        title: "Goal Setting"
+        summary: "Dummy summary for this sub-category."
+        icon: "🎯"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-10-2"
+        title: "Habit Formation"
+        summary: "Dummy summary for this sub-category."
+        icon: "🔄"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-10-3"
+        title: "Critical Thinking"
+        summary: "Dummy summary for this sub-category."
+        icon: "🤔"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-10-4"
+        title: "Emotional Intelligence"
+        summary: "Dummy summary for this sub-category."
+        icon: "💖"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
+      - id: "sc-10-5"
+        title: "Time Management"
+        summary: "Dummy summary for this sub-category."
+        icon: "⏳"
+        websites: [{name: "Example Site", url: "#", description: "A great resource."}]
+        todo: ["Dummy todo item."]
+        avoid: ["Dummy avoid item."]
