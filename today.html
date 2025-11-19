@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Today - Smart Journal</title>
+    <meta name="description" content="A text-based smart todo app" />
+    
+    <!-- Stlite (Streamlit in the browser) Configuration -->
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.50.0/build/stlite.js"></script>
+    
+    <!-- Custom CSS for a cleaner, mobile-friendly look -->
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f0f2f6;
+        }
+        /* Hide the default Streamlit hamburger menu and footer for an App-like feel */
+        header { visibility: hidden; }
+        footer { visibility: hidden; }
+        
+        .stTextArea textarea {
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+        }
+    </style>
+  </head>
+  <body>
+    <!-- The container where the app will render -->
+    <div id="root"></div>
+
+    <!-- The Python Application Code -->
+    <script>
+      stlite.mount({
+        requirements: ["pandas"], // We'll use pandas for data handling if needed, though standard lib does most here
+        entrypoint: "today_app.py",
+        files: {
+          "today_app.py": `
+import streamlit as st
+import random
+import re
+from collections import Counter
+from datetime import datetime, timedelta, date
+import calendar as cal_module
+
+# --- 1. SETUP & PERSISTENCE ---
+
+st.set_page_config(page_title="Today", page_icon="📝", layout="centered")
+
+# Try to import the 'js' module to access LocalStorage. 
+# This only works in the browser (stlite).
+try:
+    from js import window
+    HAS_JS = True
+except ImportError:
+    HAS_JS = False
+
+def load_notepad():
+    """Load text from browser local storage if available."""
+    default_text = "Buy groceries\\nFinish the report by 2025-11-20\\nCall Mom today\\nGo to the Gym everyday\\nLearn Python\\nMeeting with Sarah about ProjectX\\nProjectX budget review"
+    
+    if HAS_JS:
+        stored = window.localStorage.getItem("today_app_notepad")
+        if stored:
+            return stored
+    return default_text
+
+def save_notepad():
+    """Save the current state of the notepad to local storage."""
+    text = st.session_state["notepad_input"]
+    if HAS_JS:
+        window.localStorage.setItem("today_app_notepad", text)
+
+# Initialize Session State
+if "notepad_text" not in st.session_state:
+    st.session_state["notepad_text"] = load_notepad()
+
+# --- 2. HELPER FUNCTIONS (NLP & PARSING) ---
+
+def get_clean_tasks(raw_text):
+    """Splits text into non-empty lines."""
+    return [line.strip() for line in raw_text.split('\\n') if line.strip()]
+
+def parse_dates(tasks):
+    """
+    Parses tasks to find dates (YYYY-MM-DD) or keywords.
+    Returns a dictionary: { date_obj: [task_list] }
+    """
+    agenda = {}
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    
+    # Regex for YYYY-MM-DD
+    date_pattern = re.compile(r'\\d{4}-\\d{2}-\\d{2}')
+
+    for task in tasks:
+        task_lower = task.lower()
+        matched_date = None
+        
+        # Check keywords
+        if "today" in task_lower:
+            matched_date = today
+        elif "tomorrow" in task_lower:
+            matched_date = tomorrow
+        elif "everyday" in task_lower:
+            # Add to today for visibility
+            matched_date = today 
+        elif "weekend" in task_lower:
+             # Find next Saturday
+             days_ahead = 5 - today.weekday()
+             if days_ahead <= 0: days_ahead += 7
+             matched_date = today + timedelta(days=days_ahead)
+        else:
+            # Check Regex
+            match = date_pattern.search(task)
+            if match:
+                try:
+                    matched_date = datetime.strptime(match.group(), '%Y-%m-%d').date()
+                except:
+                    pass
+        
+        if matched_date:
+            if matched_date not in agenda:
+                agenda[matched_date] = []
+            agenda[matched_date].append(task)
+            
+    return agenda
+
+def get_categories(tasks):
+    """
+    Analyzes word frequency to create categories.
+    Returns a list of tuples: [(Word, count, [associated_tasks])]
+    """
+    # A basic list of stop words to ignore
+    STOP_WORDS = {
+        'the', 'and', 'to', 'of', 'a', 'in', 'is', 'it', 'you', 'that', 'for', 
+        'on', 'with', 'as', 'at', 'this', 'but', 'by', 'not', 'or', 'be', 'are',
+        'from', 'an', 'so', 'if', 'my', 'all', 'about', 'go', 'do', 'get', 'me',
+        'up', 'out', 'can', 'today', 'tomorrow', 'yesterday', 'everyday', 'date',
+        'task', 'note', 'buy', 'finish', 'call', 'meeting', 'review', 'weekday', 'weekend'
+    }
+    
+    word_map = {} # word -> list of tasks
+    all_words = []
+    
+    for task in tasks:
+        # Remove punctuation and split
+        clean_task = re.sub(r'[^a-zA-Z0-9\\s]', '', task.lower())
+        words = clean_task.split()
+        
+        seen_in_task = set() # Avoid counting same word twice for one task
+        for word in words:
+            if word not in STOP_WORDS and len(word) > 2 and not word.isdigit():
+                if word not in seen_in_task:
+                    all_words.append(word)
+                    if word not in word_map:
+                        word_map[word] = []
+                    word_map[word].append(task)
+                    seen_in_task.add(word)
+
+    # Count frequencies
+    counts = Counter(all_words)
+    
+    # Sort by frequency (high to low), then alphabetical
+    sorted_cats = sorted(counts.items(), key=lambda x: (-x[1], x[0]))
+    
+    # Return formatted structure
+    return [(word, count, word_map[word]) for word, count in sorted_cats if count > 0] # Filter valid
+
+# --- 3. MAIN UI LAYOUT ---
+
+st.title("Today")
+
+# Navigation Tabs
+tab_today, tab_notepad, tab_category, tab_calendar = st.tabs(["Today", "Notepad", "Categories", "Calendar"])
+
+# --- TAB: NOTEPAD (The Core) ---
+with tab_notepad:
+    st.write("Brain dump your tasks here. New line = New task.")
+    
+    # The Text Area
+    # We use key="notepad_input" and on_change=save_notepad to sync with localStorage
+    text_input = st.text_area(
+        "Notepad", 
+        value=st.session_state["notepad_text"], 
+        height=400, 
+        key="notepad_input",
+        on_change=save_notepad,
+        label_visibility="collapsed"
+    )
+    
+    st.caption("Changes are saved automatically to your browser.")
+
+# Process the text for other tabs
+tasks = get_clean_tasks(text_input)
+
+# --- TAB: TODAY ---
+with tab_today:
+    st.header(f"{date.today().strftime('%A, %B %d')}")
+    
+    # Logic: 
+    # 1. Find tasks explicitly marked for today
+    # 2. Fill the rest with random suggestions
+    
+    agenda_data = parse_dates(tasks)
+    todays_specific_tasks = agenda_data.get(date.today(), [])
+    
+    # Suggestion Logic
+    st.subheader("Focus for Today")
+    
+    if not tasks:
+        st.info("Go to Notepad and add some tasks!")
+    else:
+        # Priority 1: Tasks with today's date or keyword
+        if todays_specific_tasks:
+            for t in todays_specific_tasks:
+                st.success(f"📍 {t}")
+        
+        # Priority 2: Random suggestions from the general pile (excluding today's tasks to avoid dupes)
+        remaining_tasks = [t for t in tasks if t not in todays_specific_tasks]
+        
+        slots_needed = 3 - len(todays_specific_tasks)
+        if slots_needed > 0 and remaining_tasks:
+            # Ensure we don't sample more than available
+            k = min(len(remaining_tasks), slots_needed)
+            random_picks = random.sample(remaining_tasks, k)
+            
+            for pick in random_picks:
+                st.warning(f"🎲 {pick}")
+
+        if not todays_specific_tasks and not remaining_tasks:
+            st.success("You are all caught up!")
+
+# --- TAB: CATEGORIES ---
+with tab_category:
+    st.write("Grouped by context keywords.")
+    
+    categories = get_categories(tasks)
+    
+    if not categories:
+        st.info("Write more descriptive tasks to generate categories.")
+    
+    for word, count, associated_tasks in categories:
+        # Only show categories with meaningful content
+        with st.expander(f"📂 **{word.capitalize()}** ({count})"):
+            for t in associated_tasks:
+                st.write(f"- {t}")
+
+# --- TAB: CALENDAR ---
+with tab_calendar:
+    st.write("Agenda View")
+    
+    agenda = parse_dates(tasks)
+    
+    if not agenda:
+        st.info("No dates found. Try typing '2023-12-25' or 'tomorrow'.")
+    
+    # Sort dates chronologically
+    sorted_dates = sorted(agenda.keys())
+    
+    for d in sorted_dates:
+        # Highlight today
+        is_today = d == date.today()
+        header_icon = "🔴" if is_today else "📅"
+        
+        st.markdown(f"### {header_icon} {d.strftime('%Y-%m-%d')} ({d.strftime('%A')})")
+        
+        for t in agenda[d]:
+            st.write(f"- {t}")
+        st.markdown("---")
+
+`
+        }
+      });
+    </script>
+  </body>
+</html>
+
