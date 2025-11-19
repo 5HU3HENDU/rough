@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Today - Smart Journal</title>
+    <meta name="description" content="A text-based smart todo app" />
+    
+    <!-- Stlite (Streamlit in the browser) Configuration -->
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.50.0/build/stlite.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f0f2f6;
+        }
+        header { visibility: hidden; }
+        footer { visibility: hidden; }
+        
+        /* Notepad styling */
+        .stTextArea textarea {
+            font-size: 16px !important;
+            line-height: 1.6 !important;
+            min-height: 400px !important;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        /* Status Log styling */
+        .status-log {
+            font-size: 12px;
+            font-family: monospace;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+            background-color: #ffffff;
+            border: 1px solid #eee;
+        }
+        .status-success { color: #008000; border-left: 4px solid #008000; }
+        .status-warning { color: #e65100; border-left: 4px solid #ff9800; }
+        .status-error { color: #d32f2f; border-left: 4px solid #d32f2f; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      stlite.mount({
+        requirements: ["pandas"],
+        entrypoint: "today_app.py",
+        files: {
+          "today_app.py": `
+import streamlit as st
+import random
+import re
+import json
+import os
+from collections import Counter
+from datetime import datetime, timedelta, date
+
+# --- 1. ROBUST PERSISTENCE SYSTEM ---
+# This handles saving/loading regardless of where the app is running (Browser vs Local Python)
+
+class PersistenceManager:
+    def __init__(self):
+        self.mode = "MEM" # Default to Memory only
+        self.js_window = None
+        
+        # 1. Try Browser Storage (Stlite/Pyodide)
+        try:
+            import js
+            if hasattr(js, 'window'):
+                self.js_window = js.window
+                self.mode = "BROWSER"
+            elif hasattr(js, 'localStorage'):
+                self.js_window = js
+                self.mode = "BROWSER"
+        except ImportError:
+            pass
+        
+        # 2. If not browser, Try Local File System (Standard Python)
+        if self.mode == "MEM":
+            try:
+                # Test write access
+                with open("test_write.tmp", "w") as f:
+                    f.write("test")
+                os.remove("test_write.tmp")
+                self.mode = "FILE"
+            except:
+                pass # Stay in Memory mode if file write fails
+
+    def save(self, text):
+        status = "Not saved"
+        try:
+            if self.mode == "BROWSER":
+                self.js_window.localStorage.setItem("today_app_data", text)
+                status = "Saved to Browser Storage"
+            elif self.mode == "FILE":
+                with open("today_data.json", "w") as f:
+                    json.dump({"content": text}, f)
+                status = "Saved to 'today_data.json'"
+            else:
+                status = "Saved to Session (Temporary)"
+            return True, status
+        except Exception as e:
+            return False, f"Save Error ({self.mode}): {str(e)}"
+
+    def load(self):
+        default_text = "Buy groceries on Saturday\\nMeeting with Team A on Monday\\nCall Mom today\\nFinish the report by 2025-11-20\\nGo to the Gym everyday\\nProjectX budget review"
+        
+        try:
+            if self.mode == "BROWSER":
+                stored = self.js_window.localStorage.getItem("today_app_data")
+                if stored:
+                    return stored, "Loaded from Browser"
+            elif self.mode == "FILE":
+                if os.path.exists("today_data.json"):
+                    with open("today_data.json", "r") as f:
+                        data = json.load(f)
+                        return data.get("content", ""), "Loaded from File"
+        except Exception as e:
+            return default_text, f"Load Error: {str(e)}"
+            
+        return default_text, "New Session Started"
+
+# Initialize Manager
+pm = PersistenceManager()
+
+# --- 2. SETUP & STATE ---
+st.set_page_config(page_title="Today", page_icon="📝", layout="centered")
+
+if "notepad_content" not in st.session_state:
+    content, msg = pm.load()
+    st.session_state["notepad_content"] = content
+    st.session_state["save_status"] = msg
+    st.session_state["status_color"] = "status-warning"
+
+def perform_save():
+    """Callback to save data"""
+    current_text = st.session_state["notepad_widget"]
+    st.session_state["notepad_content"] = current_text
+    
+    success, msg = pm.save(current_text)
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    
+    st.session_state["save_status"] = f"{msg} at {timestamp}"
+    st.session_state["status_color"] = "status-success" if success else "status-error"
+
+# --- 3. NLP & DATE LOGIC ---
+
+def get_clean_tasks(raw_text):
+    return [line.strip() for line in raw_text.split('\\n') if line.strip()]
+
+def parse_dates(tasks):
+    agenda = {}
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    
+    date_pattern = re.compile(r'\\d{4}-\\d{2}-\\d{2}')
+    
+    # Mapping: monday=0 ... sunday=6
+    weekdays_map = {
+        "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, 
+        "friday": 4, "saturday": 5, "sunday": 6
+    }
+
+    for task in tasks:
+        task_lower = task.lower()
+        matched_date = None
+        
+        # 1. Strict Keywords
+        if "today" in task_lower:
+            matched_date = today
+        elif "tomorrow" in task_lower:
+            matched_date = tomorrow
+        elif "everyday" in task_lower:
+            matched_date = today 
+        elif "weekend" in task_lower:
+             # Next Saturday
+             days_ahead = 5 - today.weekday()
+             if days_ahead < 0: days_ahead += 7
+             matched_date = today + timedelta(days=days_ahead)
+        
+        # 2. Weekday Names (Monday, Tuesday...)
+        if not matched_date:
+            for day_name, day_num in weekdays_map.items():
+                # Look for whole word "Monday", not "Mundane"
+                if re.search(r'\\b' + day_name + r'\\b', task_lower):
+                    current_day_num = today.weekday()
+                    days_diff = day_num - current_day_num
+                    
+                    # Logic:
+                    # If today is Mon (0) and target is Mon (0) -> Today
+                    # If today is Mon (0) and target is Tue (1) -> Tomorrow (diff=1)
+                    # If today is Fri (4) and target is Mon (0) -> Next Mon (diff=-4 -> +7 = 3 days)
+                    
+                    if days_diff < 0:
+                        days_diff += 7
+                    
+                    matched_date = today + timedelta(days=days_diff)
+                    break 
+
+        # 3. ISO Dates (2025-12-25)
+        if not matched_date:
+            match = date_pattern.search(task)
+            if match:
+                try:
+                    matched_date = datetime.strptime(match.group(), '%Y-%m-%d').date()
+                except:
+                    pass
+        
+        if matched_date:
+            if matched_date not in agenda:
+                agenda[matched_date] = []
+            agenda[matched_date].append(task)
+            
+    return agenda
+
+def get_categories(tasks):
+    STOP_WORDS = {
+        'the', 'and', 'to', 'of', 'a', 'in', 'is', 'it', 'you', 'that', 'for', 
+        'on', 'with', 'as', 'at', 'this', 'but', 'by', 'not', 'or', 'be', 'are',
+        'from', 'an', 'so', 'if', 'my', 'all', 'about', 'go', 'do', 'get', 'me',
+        'up', 'out', 'can', 'today', 'tomorrow', 'yesterday', 'everyday', 'date',
+        'task', 'note', 'buy', 'finish', 'call', 'meeting', 'review', 'weekday', 'weekend',
+        'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
+    }
+    
+    word_map = {}
+    all_words = []
+    
+    for task in tasks:
+        # Clean punctuation but keep alphanumeric
+        clean_task = re.sub(r'[^a-zA-Z0-9\\s]', '', task.lower())
+        words = clean_task.split()
+        seen_in_task = set()
+        for word in words:
+            # Filter logic
+            if word not in STOP_WORDS and len(word) > 2 and not word.isdigit():
+                if word not in seen_in_task:
+                    all_words.append(word)
+                    if word not in word_map:
+                        word_map[word] = []
+                    word_map[word].append(task)
+                    seen_in_task.add(word)
+
+    counts = Counter(all_words)
+    sorted_cats = sorted(counts.items(), key=lambda x: (-x[1], x[0]))
+    return [(word, count, word_map[word]) for word, count in sorted_cats if count > 0]
+
+# --- 4. UI RENDER ---
+
+st.title("Today")
+tab_today, tab_notepad, tab_category, tab_calendar = st.tabs(["Today", "Notepad", "Categories", "Calendar"])
+
+# --- NOTEPAD ---
+with tab_notepad:
+    st.caption("Type freely. Changes save automatically.")
+    
+    st.text_area(
+        "Notepad", 
+        value=st.session_state["notepad_content"], 
+        height=400, 
+        key="notepad_widget",
+        on_change=perform_save,
+        label_visibility="collapsed"
+    )
+    
+    # Save Button
+    if st.button("Force Save", type="primary"):
+        perform_save()
+
+    # Log Output
+    st.markdown(
+        f"""
+        <div class="status-log {st.session_state.get("status_color", "black")}">
+            STATUS: {st.session_state.get("save_status", "Ready")} <br>
+            MODE: {pm.mode}
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+
+# --- PROCESSING ---
+tasks = get_clean_tasks(st.session_state["notepad_content"])
+agenda_data = parse_dates(tasks)
+
+# --- TODAY TAB ---
+with tab_today:
+    now_date = date.today()
+    st.header(f"{now_date.strftime('%A, %B %d')}")
+    
+    todays_tasks = agenda_data.get(now_date, [])
+    
+    st.subheader("Tasks for Today")
+    
+    if not tasks:
+        st.info("Go to Notepad and add some tasks!")
+    else:
+        # 1. Explicit for today
+        if todays_tasks:
+            for t in todays_tasks:
+                st.success(f"📍 {t}")
+        
+        # 2. Random Fillers
+        remaining = [t for t in tasks if t not in todays_tasks]
+        slots_needed = 3 - len(todays_tasks)
+        
+        if slots_needed > 0 and remaining:
+            k = min(len(remaining), slots_needed)
+            picks = random.sample(remaining, k)
+            for p in picks:
+                st.warning(f"🎲 {p}")
+        elif not todays_tasks:
+             st.success("No tasks found. Relax!")
+
+# --- CALENDAR TAB ---
+with tab_calendar:
+    st.write("📅 Agenda")
+    
+    if not agenda_data:
+        st.info("Mention days (e.g., 'Monday', 'Tomorrow') in your notes to populate this.")
+    
+    for d in sorted(agenda_data.keys()):
+        is_today = d == date.today()
+        day_str = d.strftime('%A')
+        date_str = d.strftime('%Y-%m-%d')
+        
+        if is_today:
+            st.markdown(f"#### 🔴 {day_str} (Today)")
+        else:
+            st.markdown(f"#### {day_str}, {date_str}")
+            
+        for t in agenda_data[d]:
+            st.write(f"- {t}")
+        st.divider()
+
+# --- CATEGORY TAB ---
+with tab_category:
+    st.write("Context Groups")
+    cats = get_categories(tasks)
+    
+    if not cats:
+        st.info("Add more detailed tasks to generate categories.")
+        
+    for word, count, t_list in cats:
+        with st.expander(f"📂 **{word.capitalize()}** ({count})"):
+            for t in t_list:
+                st.write(f"- {t}")
+`
+        }
+      });
+    </script>
+  </body>
+</html>
+
+
